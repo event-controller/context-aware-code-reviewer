@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cacr.framework/schemas/v4.1/cacr-report.schema.json",
+  "title": "CACR Audit Report",
+  "description": "Standard output format for the Context-Aware Automated Code Reviewer (v4.1)",
+  "type": "object",
+  "required": [
+    "metadata",
+    "project_context",
+    "brittleness_score",
+    "severity_breakdown",
+    "confidence_breakdown",
+    "status_breakdown",
+    "findings",
+    "manual_review_required",
+    "triage_metrics",
+    "remediations",
+    "summary"
+  ],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["version", "timestamp", "audit_id", "risk_level", "risk_level_label", "files_analyzed", "context_completeness"],
+      "properties": {
+        "version": { "type": "string", "const": "4.1.0" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "audit_id": { "type": "string" },
+        "risk_level": { "type": "integer", "enum": [1, 2, 3] },
+        "risk_level_label": { "type": "string" },
+        "files_analyzed": { "type": "integer" },
+        "context_completeness": { "type": "string", "enum": ["FULL", "PARTIAL"] },
+        "context_warning": { "type": "string" }
+      }
+    },
+    "project_context": {
+      "type": "object",
+      "properties": {
+        "language": { "type": "string" },
+        "framework": { "type": "string" },
+        "has_network": { "type": "boolean" },
+        "has_database": { "type": "boolean" },
+        "has_auth": { "type": "boolean" },
+        "has_payment": { "type": "boolean" },
+        "sensitive_data_types": { "type": "array", "items": { "type": "string" } },
+        "dependencies": { "type": "object", "additionalProperties": { "type": "string" } },
+        "risk_factors": { "type": "array", "items": { "type": "string" } },
+        "mandatory_escalations_applied": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "brittleness_score": {
+      "type": "object",
+      "required": ["score", "grade", "description", "findings_count", "uncertainty_penalty_applied"],
+      "properties": {
+        "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "grade": { "type": "string", "enum": ["A - Resilient", "B - Moderately Brittle", "C - Brittle", "D - Highly Brittle", "F - Critically Fragile"] },
+        "description": { "type": "string" },
+        "findings_count": { "type": "integer" },
+        "uncertainty_penalty_applied": { "type": "integer" },
+        "score_cap_applied": { "type": "integer" },
+        "score_cap_source": { "type": "string" }
+      }
+    },
+    "severity_breakdown": {
+      "type": "object",
+      "properties": {
+        "CRITICAL": { "type": "integer" },
+        "HIGH": { "type": "integer" },
+        "MEDIUM": { "type": "integer" },
+        "LOW": { "type": "integer" },
+        "INFO": { "type": "integer" }
+      }
+    },
+    "confidence_breakdown": {
+      "type": "object",
+      "properties": {
+        "HIGH": { "type": "integer" },
+        "MEDIUM": { "type": "integer" },
+        "LOW": { "type": "integer" },
+        "UNKNOWN": { "type": "integer" }
+      }
+    },
+    "status_breakdown": {
+      "type": "object",
+      "properties": {
+        "CONFIRMED": { "type": "integer" },
+        "NEEDS_CONTEXT": { "type": "integer" },
+        "UNCERTAIN": { "type": "integer" }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "confidence", "status", "component", "title", "description", "location", "data_flow", "remediation", "cwe"],
+        "properties": {
+          "id": { "type": "string" },
+          "severity": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"] },
+          "confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW", "UNKNOWN"] },
+          "status": { "type": "string", "enum": ["CONFIRMED", "NEEDS_CONTEXT", "UNCERTAIN"] },
+          "component": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "location": {
+            "type": "object",
+            "properties": {
+              "file": { "type": "string" },
+              "line": { "type": "integer" },
+              "code": { "type": "string" }
+            }
+          },
+          "data_flow": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "line": { "type": "integer" },
+                "code": { "type": "string" }
+              }
+            }
+          },
+          "remediation": { "type": "string" },
+          "cwe": { "type": "string" }
+        }
+      }
+    },
+    "manual_review_required": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["location", "uncertainty_reason", "related_rule", "recommendation", "code"],
+        "properties": {
+          "location": { "type": "string" },
+          "uncertainty_reason": { "type": "string" },
+          "related_rule": { "type": "string" },
+          "recommendation": { "type": "string" },
+          "code": { "type": "string" }
+        }
+      }
+    },
+    "triage_metrics": {
+      "type": "object",
+      "properties": {
+        "total_findings_detected": { "type": "integer" },
+        "findings_suppressed_as_low_risk": { "type": "integer" },
+        "findings_escalated_to_review": { "type": "integer" },
+        "confirmed_to_total_ratio": { "type": "number" },
+        "noise_reduction_ratio": { "type": "number" }
+      }
+    },
+    "remediations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "finding_id": { "type": "string" },
+          "severity": { "type": "string" },
+          "action": { "type": "string" },
+          "location": { "type": "string" },
+          "effort_estimate": { "type": "string" }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "total_findings": { "type": "integer" },
+        "critical_count": { "type": "integer" },
+        "high_count": { "type": "integer" },
+        "message": { "type": "string" },
+        "action_required": { "type": "boolean" },
+        "context_warning": { "type": "string" }
+      }
+    }
+  }
+        }
